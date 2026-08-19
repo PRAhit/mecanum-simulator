@@ -154,7 +154,13 @@ def main() -> int:
         r = sc.execute(seed=0)
         path = args.out / f"{sc.name}.png"
         (plot_tracking if sc.name in TRACKING else plot_fault)(r, sc.name, path)
-        print(f"wrote {path.relative_to(ROOT)}")
+        # --out may point outside the repository, in which case there is no
+        # relative form to show.
+        try:
+            shown = path.relative_to(ROOT)
+        except ValueError:
+            shown = path
+        print(f"wrote {shown}")
     return 0
 
 

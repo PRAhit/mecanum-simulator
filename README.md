@@ -176,28 +176,195 @@ One more result worth stating because it is *not* a bug: single-wheel traction l
 
 ## Build and run
 
+### Prerequisites
+
+| | |
+|---|---|
+| Compiler | any C++17 compiler — GCC 9+, Clang 10+, AppleClang 14+, MSVC 2019+ |
+| CMake | 3.16 or newer |
+| Python | 3.9+ for the harness and bindings; CI pins 3.11 |
+
+GoogleTest is fetched by CMake at configure time, so the first configure needs
+network access. Nothing else is vendored.
+
 ```bash
-# C++ core and unit tests
-cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
-cmake --build build -j
-ctest --test-dir build --output-on-failure
+# macOS
+xcode-select --install && brew install cmake python@3.11 clang-format
 
-# Python bindings and the SIL harness
-pip install numpy matplotlib pytest pybind11
-cmake -S . -B build -DODC_BUILD_PYTHON=ON \
-  -Dpybind11_DIR=$(python -c "import pybind11; print(pybind11.get_cmake_dir())")
-cmake --build build -j && cp build/omni_drive_core*.so python/
-
-python -m pytest tests/ -q
-python tools/run_scenarios.py --seeds 12     # acceptance gates
-python tools/plot_scenarios.py               # regenerate docs/img
+# Debian / Ubuntu
+sudo apt install build-essential cmake python3-venv clang-format
 ```
 
+### Python environment
+
+A pybind11 extension module is built against one specific interpreter and will
+not import into a different minor version. Use a virtual environment, and use
+the same one for building and running:
+
 ```bash
-# ROS 2 (Jazzy)
+python3.11 -m venv .venv && source .venv/bin/activate
+pip install numpy matplotlib pytest pybind11 ruff
+```
+
+### Build
+
+Two configurations. The first is what to use while working on the control core;
+the second additionally builds the module the simulation harness imports.
+
+```bash
+# C++ core and unit tests
+cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DODC_BUILD_TESTS=ON
+cmake --build build -j
+
+# ...and the pybind11 module
+cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DODC_BUILD_PYTHON=ON \
+  -Dpybind11_DIR=$(python -c "import pybind11; print(pybind11.get_cmake_dir())")
+cmake --build build -j && cp build/omni_drive_core*.so python/
+```
+
+The `cp` is not incidental: `python/odc_sim` imports `omni_drive_core` from
+alongside itself, so the freshly built module has to land in `python/` or every
+simulation command below fails with `ModuleNotFoundError`.
+
+| CMake option | Default | Effect |
+|---|---|---|
+| `ODC_BUILD_TESTS` | `ON` | GoogleTest suite (`odc_tests`) |
+| `ODC_BUILD_PYTHON` | `OFF` | pybind11 module; requires `pybind11_DIR` |
+| `ODC_WARNINGS_AS_ERRORS` | `ON` | `-Werror`, or `/WX` under MSVC |
+
+### Testing
+
+Three suites, all of which run in CI and all of which must pass.
+
+#### C++ unit tests — 35 cases
+
+```bash
+ctest --test-dir build --output-on-failure       # through ctest
+./build/odc_tests                                # or the binary directly
+./build/odc_tests --gtest_filter='SlipDetector.*'  # one suite
+./build/odc_tests --gtest_filter='*Estop*'         # one case
+./build/odc_tests --gtest_list_tests               # enumerate without running
+```
+
+| Suite | Cases | What it pins down |
+|---|---|---|
+| `Kinematics` | 5 | forward/inverse round trip, strafe signs, rank-one residual |
+| `WheelController` | 4 | convergence, torque limit, anti-windup, setpoint slew |
+| `PoseEkf` | 5 | dead reckoning, fix correction, outlier rejection, gyro bias |
+| `SlipDetector` | 11 | all three channels, plus the false-positive counter-examples |
+| `SafetyMonitor` | 5 | field ramp, resume clearance, chatter, watchdog, e-stop latch |
+| `DriveCore` | 5 | integration, protective stop, dead node, bitwise determinism |
+
+#### Python tests — 57 cases
+
+```bash
+python -m pytest tests/ -q            # quiet
+python -m pytest tests/ -v            # one line per case
+python -m pytest tests/ -k ekf        # substring filter
+python -m pytest tests/ -x            # stop at first failure
+```
+
+The count exceeds the nine test functions because the geometry and gate tests
+are parametrised — over random seeds for the property checks, and over all 11
+scenarios for `test_scenario_gates`.
+
+#### Scenario acceptance gates — 11 scenarios
+
+Closed-loop runs against the plant model, each with numeric limits. The runner
+exits non-zero if any gate fails, so it is usable directly as a CI step.
+
+```bash
+python tools/run_scenarios.py                          # all scenarios, 1 seed
+python tools/run_scenarios.py --seeds 12               # the table above
+python tools/run_scenarios.py --only estop wheel_jam   # a subset
+python tools/run_scenarios.py --json artifacts/scenarios.json
+python tools/run_scenarios.py --no-color               # for logs
+```
+
+Scenario names for `--only`: `straight_line`, `lateral_strafe`, `figure_eight`,
+`spin_in_place`, `traction_loss_wet_strip`,
+`traction_loss_single_wheel_absorbed`, `wheel_jam`, `obstacle_intrusion`,
+`bus_dropout`, `localisation_blackout`, `estop`.
+
+Gates tuned against a single noise realisation are gates that pass by luck, so
+CI runs 8 seeds and the table above reports the worst of 12.
+
+### Tools
+
+| Script | Purpose | Options |
+|---|---|---|
+| `tools/run_scenarios.py` | acceptance report; non-zero exit on failure | `--only`, `--seeds`, `--json`, `--no-color` |
+| `tools/plot_scenarios.py` | regenerate the traces in `docs/img` | `--only`, `--out` |
+
+```bash
+python tools/plot_scenarios.py                     # rewrite docs/img
+python tools/plot_scenarios.py --only figure_eight --out /tmp/plots
+```
+
+### Lint
+
+```bash
+ruff check python tools tests
+find cpp bindings ros2_ws -name '*.cpp' -o -name '*.hpp' \
+  | xargs clang-format --dry-run --Werror
+```
+
+### Sanitizers
+
+The control path claims to be allocation-free and deterministic; sanitizers are
+how that stays honest. Build into a separate directory so the normal build is
+untouched:
+
+```bash
+cmake -S . -B build-asan -DCMAKE_BUILD_TYPE=Debug -DODC_BUILD_TESTS=ON \
+  -DCMAKE_CXX_FLAGS="-fsanitize=address -fno-omit-frame-pointer" \
+  -DCMAKE_EXE_LINKER_FLAGS="-fsanitize=address"
+cmake --build build-asan -j
+ASAN_OPTIONS=detect_leaks=1 ./build-asan/odc_tests
+```
+
+Substitute `undefined` for `address` to get the UBSan build, with
+`UBSAN_OPTIONS=print_stacktrace=1:halt_on_error=1`.
+
+### Everything at once
+
+From a clean clone, this is the full check that CI performs:
+
+```bash
+python3.11 -m venv .venv && source .venv/bin/activate
+pip install numpy matplotlib pytest pybind11 ruff
+cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DODC_BUILD_PYTHON=ON \
+  -Dpybind11_DIR=$(python -c "import pybind11; print(pybind11.get_cmake_dir())")
+cmake --build build -j && cp build/omni_drive_core*.so python/
+ctest --test-dir build --output-on-failure
+python -m pytest tests/ -q
+python tools/run_scenarios.py --seeds 12
+ruff check python tools tests
+```
+
+### ROS 2 (Jazzy)
+
+```bash
 cd ros2_ws && colcon build && source install/setup.bash
 ros2 launch omni_drive_ros drive.launch.py
 ```
+
+ROS 2 Jazzy ships Linux binaries only. On macOS or Windows the wrapper builds in
+a container, which is also what CI uses; the core and the whole simulation suite
+need none of this.
+
+```bash
+docker run -it -v "$(pwd)":/ws -w /ws/ros2_ws ros:jazzy-ros-base \
+  bash -c "source /opt/ros/jazzy/setup.bash && colcon build"
+```
+
+### VS Code
+
+`.vscode/` configures the workspace: IntelliSense reads the generated
+`compile_commands.json`, the Test panel picks up pytest, and **Terminal → Run
+Task…** exposes the commands above in order — `1. venv + deps`, `2. build core +
+tests`, `3. build bindings`, then the test, scenario, plot and lint tasks.
+Select the `./.venv/bin/python` interpreter once and the rest follows.
 
 ### ROS 2 interface
 
