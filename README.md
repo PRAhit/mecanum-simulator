@@ -1,40 +1,28 @@
 # Mecanum Robot Simulator
 
-**What this project does, in five points:**
-
-1. It pretends to be a robot with four **mecanum wheels** — the special kind that
-   can slide sideways without turning first.
-2. You tell it how you want to move — forwards, sideways, or spin — and it works
-   out **how fast each of the four wheels has to turn**.
-3. It does the reverse too: given the four wheel speeds, it works out **which way
-   the robot must be moving**. That is how a real robot guesses where it has got to.
-4. It can **drive itself to a point** you pick, speeding up when far away and
-   slowing down as it arrives.
-5. It **draws pictures** of everything it does, and **8 tests** check the maths
-   is right.
-
-It is a simulation, not a real robot. There is no hardware, and the wheels always
-do exactly what they are told.
-
----
-
-A small hobby project I built to understand how robots with **mecanum wheels**
+A small Python project I built to understand how robots with **mecanum wheels**
 drive sideways.
 
-Most robots, like most cars, have to turn before they can change direction. A
-robot on mecanum wheels does not — it can slide straight sideways while still
-facing forwards. I thought that was a neat trick, and I wanted to understand the
-maths well enough to write it down myself, so I built a little simulator.
+![the robot driving a square without turning](images/robot.gif)
 
-There is no real robot here. It is about 250 lines of Python that works out how
-fast each wheel should spin, pretends to drive the robot around, and draws the
-path it took.
+Watch the red arrow. It never moves — the robot is driving a complete square
+without turning even once. A car has to point where it is going; this robot
+does not.
 
-![a square driven without turning](images/square.png)
+You tell it how you want to move, it works out how fast each of the four wheels
+must spin, and it draws what happens. About 250 lines of Python, no hardware.
 
-That square was driven without the robot turning even once. It went forward,
-then left, then backward, then right, and finished exactly where it started,
-still facing the same way.
+**Try it in thirty seconds:**
+
+```bash
+pip install -r requirements.txt
+python3 demo.py            # runs it and makes the pictures below
+python3 -m pytest -v       # runs the 8 tests
+```
+
+Every picture in this README is produced by the code — `demo.py` writes the
+charts and `animate.py` writes the animation above. Nothing here is drawn by
+hand.
 
 ---
 
@@ -102,13 +90,33 @@ fidgeting forever.
 You need Python 3. Then:
 
 ```bash
-pip install matplotlib pytest
+pip install -r requirements.txt
 
-python3 demo.py            # runs the demos, saves the pictures
-python3 -m pytest -v       # runs the tests
+python3 demo.py            # run the demos and save the charts
+python3 animate.py         # save the animation at the top of this page
+python3 -m pytest -v       # run the tests
 ```
 
-`demo.py` prints what happened and writes three pictures into `images/`.
+Everything lands in `images/`:
+
+| Command | Writes |
+|---|---|
+| `demo.py` | `square.png`, `targets.png`, `wheels.png` |
+| `animate.py` | `robot.gif` |
+
+`demo.py` also prints a short summary of each demo, so you can see the numbers
+without opening the pictures. `animate.py` is slower — it draws 100 frames — so
+it is kept separate rather than run every time.
+
+You can also poke at the maths directly:
+
+```bash
+python3 -c "import mecanum; print(mecanum.wheel_speeds(0, 1, 0))"
+# [-20.0, 20.0, -20.0, 20.0]   <- sliding left at 1 m/s
+```
+
+Change the three numbers (forward, sideways, turn) and watch the wheel pattern
+change.
 
 ---
 
