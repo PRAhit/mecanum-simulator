@@ -1,5 +1,23 @@
 # Mecanum Robot Simulator
 
+**What this project does, in five points:**
+
+1. It pretends to be a robot with four **mecanum wheels** — the special kind that
+   can slide sideways without turning first.
+2. You tell it how you want to move — forwards, sideways, or spin — and it works
+   out **how fast each of the four wheels has to turn**.
+3. It does the reverse too: given the four wheel speeds, it works out **which way
+   the robot must be moving**. That is how a real robot guesses where it has got to.
+4. It can **drive itself to a point** you pick, speeding up when far away and
+   slowing down as it arrives.
+5. It **draws pictures** of everything it does, and **8 tests** check the maths
+   is right.
+
+It is a simulation, not a real robot. There is no hardware, and the wheels always
+do exactly what they are told.
+
+---
+
 A small hobby project I built to understand how robots with **mecanum wheels**
 drive sideways.
 
