@@ -1,0 +1,24 @@
+{
+  // --- Python -------------------------------------------------------------
+  "python.defaultInterpreterPath": "${workspaceFolder}/.venv/bin/python",
+  "python.analysis.extraPaths": ["${workspaceFolder}/python"],
+  "python.testing.pytestEnabled": true,
+  "python.testing.pytestArgs": ["tests"],
+  "python.testing.unittestEnabled": false,
+
+  // --- C++ / CMake --------------------------------------------------------
+  // Tests ON so CMake Tools produces compile_commands.json for IntelliSense.
+  // The pybind11 module is built by the "bindings" task instead, because
+  // pybind11_DIR has to be resolved by running the venv interpreter.
+  "cmake.sourceDirectory": "${workspaceFolder}",
+  "cmake.buildDirectory": "${workspaceFolder}/build",
+  "cmake.configureArgs": ["-DODC_BUILD_TESTS=ON"],
+  "cmake.copyCompileCommands": "${workspaceFolder}/compile_commands.json",
+  "C_Cpp.default.compileCommands": "${workspaceFolder}/compile_commands.json",
+  "C_Cpp.default.cppStandard": "c++17",
+  "C_Cpp.clang_format_style": "file",
+  "[cpp]": { "editor.defaultFormatter": "xaver.clang-format" },
+  "[python]": { "editor.defaultFormatter": "charliermarsh.ruff" },
+
+  "files.exclude": { "**/__pycache__": true, "**/.pytest_cache": true, "**/.ruff_cache": true }
+}

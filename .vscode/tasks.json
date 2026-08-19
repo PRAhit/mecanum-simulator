@@ -1,0 +1,57 @@
+{
+  "version": "2.0.0",
+  "options": { "cwd": "${workspaceFolder}" },
+  "tasks": [
+    {
+      "label": "1. venv + deps",
+      "type": "shell",
+      "command": "python3 -m venv .venv && .venv/bin/pip install --upgrade pip && .venv/bin/pip install numpy matplotlib pytest pybind11 ruff",
+      "problemMatcher": []
+    },
+    {
+      "label": "2. build core + tests",
+      "type": "shell",
+      "command": "cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DODC_BUILD_TESTS=ON && cmake --build build -j",
+      "group": { "kind": "build", "isDefault": true },
+      "problemMatcher": ["$gcc"]
+    },
+    {
+      "label": "3. build bindings",
+      "detail": "Builds the pybind11 module and drops it next to odc_sim so imports resolve.",
+      "type": "shell",
+      "command": "cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DODC_BUILD_PYTHON=ON -DODC_BUILD_TESTS=OFF -Dpybind11_DIR=$(.venv/bin/python -c 'import pybind11; print(pybind11.get_cmake_dir())') && cmake --build build -j && cp build/omni_drive_core*.so python/",
+      "problemMatcher": ["$gcc"]
+    },
+    {
+      "label": "C++ tests (ctest)",
+      "type": "shell",
+      "command": "ctest --test-dir build --output-on-failure",
+      "group": { "kind": "test", "isDefault": true },
+      "problemMatcher": []
+    },
+    {
+      "label": "Python tests (pytest)",
+      "type": "shell",
+      "command": ".venv/bin/python -m pytest tests/ -q",
+      "problemMatcher": []
+    },
+    {
+      "label": "Run scenarios (acceptance gates)",
+      "type": "shell",
+      "command": ".venv/bin/python tools/run_scenarios.py --seeds 12",
+      "problemMatcher": []
+    },
+    {
+      "label": "Regenerate plots",
+      "type": "shell",
+      "command": ".venv/bin/python tools/plot_scenarios.py",
+      "problemMatcher": []
+    },
+    {
+      "label": "Lint (ruff + clang-format)",
+      "type": "shell",
+      "command": ".venv/bin/ruff check python tools tests && find cpp bindings ros2_ws -name '*.cpp' -o -name '*.hpp' | xargs clang-format --dry-run --Werror",
+      "problemMatcher": []
+    }
+  ]
+}
