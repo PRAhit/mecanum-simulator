@@ -1,10 +1,3 @@
-build/
-artifacts/
 __pycache__/
-*.so
-*.pyc
+.pytest_cache/
 .venv/
-compile_commands.json
-
-# Private notes, not part of the deliverable
-docs/INTERVIEW_NOTES.md
