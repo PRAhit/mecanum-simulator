@@ -1,0 +1,39 @@
+# Tuning for a generic four-wheel mecanum wheelset under a loaded cart.
+# Values match cpp/include/odc defaults; anything not listed falls back to them.
+omni_drive_node:
+  ros__parameters:
+    control_period: 0.005        # 200 Hz
+
+    geometry:
+      wheel_radius: 0.0625
+      half_wheelbase: 0.30
+      half_track: 0.25
+
+    wheel:
+      kp: 0.45
+      ki: 6.0
+      torque_limit: 4.5
+      accel_limit: 40.0
+      anti_windup_gain: 13.3     # rule of thumb: ki / kp
+
+    tracker:
+      kp_xy: 2.2
+      kp_theta: 3.0
+      max_vx: 1.2
+      max_vy: 0.9                # lateral is slower: rollers, not tyres
+      max_wz: 1.5
+      max_accel: 1.0
+
+    safety:
+      stop_distance: 0.35        # protective field
+      slow_distance: 1.40        # warning field
+      command_timeout: 0.30
+      bus_timeout: 0.10
+
+    slip:
+      kin_enter: 1.2             # rad/s of wheel-speed inconsistency
+      gyro_enter: 0.20           # rad/s odometry-vs-gyro disagreement
+
+    odom_frame: odom
+    base_frame: base_link
+    publish_tf: true

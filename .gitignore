@@ -1,0 +1,10 @@
+build/
+artifacts/
+__pycache__/
+*.so
+*.pyc
+.venv/
+compile_commands.json
+
+# Private notes, not part of the deliverable
+docs/INTERVIEW_NOTES.md
