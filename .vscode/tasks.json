@@ -5,7 +5,7 @@
     {
       "label": "1. venv + deps",
       "type": "shell",
-      "command": "python3 -m venv .venv && .venv/bin/pip install --upgrade pip && .venv/bin/pip install numpy matplotlib pytest pybind11 ruff",
+      "command": "PY=$(command -v python3.11 || command -v python3) && \"$PY\" -m venv .venv && .venv/bin/pip install --upgrade pip && .venv/bin/pip install numpy matplotlib pytest pybind11 ruff && .venv/bin/python --version",
       "problemMatcher": []
     },
     {
