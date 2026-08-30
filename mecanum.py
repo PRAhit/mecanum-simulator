@@ -132,6 +132,39 @@ def world_to_body(world_x, world_y, theta):
     We want to drive north, but the robot only understands "forward" and
     "left" -- so this works out what that means from where it is standing.
     Same maths as above with the angle flipped, which is what undoes a rotation.
+
+    ----------------------------------------------------------------------
+    WHY THIS FUNCTION EXISTS -- one order, given to two different robots
+    ----------------------------------------------------------------------
+
+    body_to_world() records what the robot DID. This one gives it an ORDER.
+    Same rotation, opposite direction, and it is the one drive_to.py needs.
+
+    In both traces the robot sits at (0, 0) and the target is due EAST at
+    (2, 0). The controller wants the same thing both times -- "head east at
+    0.8 m/s" -- and both times it hands this function world_vx = 0.800,
+    world_vy = 0.000. Only the robot's heading differs.
+
+    Trace 3 -- robot facing EAST (theta = 0):
+
+        drive_to.py    ->  world_vx = 0.800  world_vy = 0.000   (map)
+        world_to_body  ->  vx = 0.800   vy = 0.000              (robot)
+                           "drive straight forward"
+
+    Trace 4 -- robot facing NORTH (theta = 90):
+
+        drive_to.py    ->  world_vx = 0.800  world_vy = 0.000   (map, SAME)
+        world_to_body  ->  vx = 0.000   vy = -0.800             (robot)
+                           "do not go forward at all -- slide RIGHT"
+
+    Both robots arrive at (1.98, 0.00), and both are still facing exactly the
+    way they started. The second one got there entirely sideways.
+
+    That is the whole project in one number: vx = 0.000, vy = -0.800. A car
+    would have had to turn east first. This robot just slides, because
+    wheel_speeds() can turn a pure vy into four wheel speeds, and because this
+    function worked out that "east" means "my right" when you are facing north.
+    ----------------------------------------------------------------------
     """
     # The same rotation run with -theta instead of +theta. Rotating backwards
     # by the same angle is exactly what cancels a rotation out.
