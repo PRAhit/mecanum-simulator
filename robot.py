@@ -12,6 +12,9 @@ class Robot:
     """Remembers where the robot is and moves it when told to."""
 
     def __init__(self, x=0.0, y=0.0, theta=0.0):
+        """Put the robot somewhere, facing some direction, and stop there."""
+        # These three numbers together are all there is to know about the
+        # robot at any moment. The usual name for them is the robot's "pose".
         self.x = x          # position east, in metres
         self.y = y          # position north, in metres
         self.theta = theta  # which way it is facing, in radians
@@ -30,15 +33,24 @@ class Robot:
         the maths in the loop keeps the simulation tied to what the wheels can
         actually do.
         """
+        # 1. what would the four wheels have to do to make that happen?
         speeds = mecanum.wheel_speeds(vx, vy, omega)
+
+        # 2. and given the wheels are doing that, how does the robot move?
         actual_vx, actual_vy, actual_omega = mecanum.robot_motion(speeds)
 
-        # Where does that push the robot on the map?
+        # 3. that answer is in the robot's own directions. Where does it push
+        #    the robot on the map?
         world_x, world_y = mecanum.body_to_world(actual_vx, actual_vy, self.theta)
 
+        # 4. take one small step. Speed multiplied by time is distance, and
+        #    over a slice this short a straight line is close enough to the
+        #    truth. (The proper name for adding up steps like this is
+        #    integration; this simplest version of it is called Euler's.)
         self.x += world_x * dt
         self.y += world_y * dt
         self.theta += actual_omega * dt
 
     def position(self):
+        """Where the robot has got to, as (x, y) in metres."""
         return self.x, self.y

@@ -29,6 +29,7 @@ def test_sliding_sideways_splits_the_wheels_into_two_pairs():
 
 
 def test_spinning_turns_the_left_and_right_sides_opposite_ways():
+    """Spinning on the spot should look like a tank: one side forward, one back."""
     front_left, front_right, rear_right, rear_left = mecanum.wheel_speeds(0, 0, 1.0)
     assert front_left < 0 and rear_left < 0      # left side backwards
     assert front_right > 0 and rear_right > 0    # right side forwards
@@ -71,6 +72,7 @@ def test_it_slows_down_as_it_arrives():
 
 
 def test_it_stops_when_it_gets_there():
+    """Sitting exactly on the target must give a clean zero, not a small twitch."""
     robot = Robot(x=2.0, y=1.0)
     assert drive_to.velocity_towards(robot, 2.0, 1.0) == (0.0, 0.0)
 

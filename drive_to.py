@@ -13,9 +13,12 @@ import math
 
 import mecanum
 
-GAIN = 1.5          # how hard to chase the target
-TOP_SPEED = 0.8     # m/s -- do not drive faster than this
-CLOSE_ENOUGH = 0.02  # metres -- stop fussing once this close
+# Three numbers, and each one is there to stop a specific silly behaviour.
+GAIN = 1.5           # how hard to chase the target. In PID language this is Kp.
+TOP_SPEED = 0.8      # m/s -- a speed cap. Without it a target 100 m away would
+                     # ask for 150 m/s. Capping like this is called saturation.
+CLOSE_ENOUGH = 0.02  # metres -- a deadband. Without it the robot never settles,
+                     # because it can never land on the point exactly.
 
 
 def velocity_towards(robot, target_x, target_y):
@@ -25,7 +28,8 @@ def velocity_towards(robot, target_x, target_y):
     Returns (vx, vy) in the robot's own directions, ready to hand to drive().
     Returns (0, 0) once it has arrived.
     """
-    # How far away is it, on the map?
+    # How far away is it, on the map? A controller would call this the error:
+    # the gap between where we are and where we want to be.
     away_x = target_x - robot.x
     away_y = target_y - robot.y
     distance = math.hypot(away_x, away_y)
@@ -46,4 +50,10 @@ def velocity_towards(robot, target_x, target_y):
 
 
 def arrived(robot, target_x, target_y):
+    """
+    Have we got there yet?
+
+    Same test velocity_towards() uses to decide to stop, pulled out so a
+    caller can ask the question without also asking for a velocity.
+    """
     return math.hypot(target_x - robot.x, target_y - robot.y) < CLOSE_ENOUGH

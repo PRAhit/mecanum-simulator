@@ -36,6 +36,7 @@ def corners(robot):
 
 
 def main():
+    """Run the square, then draw it back one frame at a time."""
     # Drive the square first and remember every position along the way.
     robot = Robot()
     frames = []
@@ -70,6 +71,7 @@ def main():
     trail_x, trail_y = [], []
 
     def draw(i):
+        """Draw frame i: the trail so far, the body, and the heading marker."""
         x, y, theta = frames[i]
         trail_x.append(x)
         trail_y.append(y)
