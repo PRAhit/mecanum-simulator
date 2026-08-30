@@ -87,6 +87,37 @@ def body_to_world(vx, vy, theta):
     drives forward, it moves north; if it is facing east, the same command moves
     it east. So before we can draw the path we have to rotate the robot's own
     velocity by whichever way it happens to be pointing.
+
+    ----------------------------------------------------------------------
+    WHY THIS FUNCTION EXISTS -- the same command, traced twice
+    ----------------------------------------------------------------------
+
+    Both traces below run the identical command through the whole program.
+    The ONLY difference is which way the robot happens to be facing.
+
+    Trace 1 -- robot facing EAST (theta = 0):
+
+        demo.py        typed:  vx = 0.5
+        wheel_speeds   ->      [10.0, 10.0, 10.0, 10.0]
+        robot_motion   ->      actual_vx = 0.500
+        body_to_world  ->      world_x = 0.500   world_y = 0.000
+        robot.py       ->      self.x = 0.0100   self.y = 0.0000
+
+    Trace 2 -- the EXACT same command, robot facing NORTH (theta = 90):
+
+        demo.py        typed:  vx = 0.5                     <- identical
+        wheel_speeds   ->      [10.0, 10.0, 10.0, 10.0]     <- identical
+        robot_motion   ->      actual_vx = 0.500            <- identical
+        body_to_world  ->      world_x = 0.000  world_y = 0.500   <- DIFFERENT
+        robot.py       ->      self.x = 0.0000  self.y = 0.0100   <- went NORTH
+
+    Same command. Same wheel speeds. Completely different place on the map,
+    purely because theta was different.
+
+    This function is where "which way am I facing?" enters the maths, and
+    world_x / world_y is where it lands. Everything above this line in the
+    trace is blind to heading; everything below it depends on heading.
+    ----------------------------------------------------------------------
     """
     # An ordinary 2D rotation by theta -- the standard sine and cosine pair.
     world_x = vx * math.cos(theta) - vy * math.sin(theta)

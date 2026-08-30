@@ -40,7 +40,10 @@ class Robot:
         actual_vx, actual_vy, actual_omega = mecanum.robot_motion(speeds)
 
         # 3. that answer is in the robot's own directions. Where does it push
-        #    the robot on the map?
+        #    the robot on the map? This is the one step that depends on which
+        #    way the robot is facing -- see the two traces written out in
+        #    mecanum.body_to_world() for the same command landing in two
+        #    completely different places.
         world_x, world_y = mecanum.body_to_world(actual_vx, actual_vy, self.theta)
 
         # 4. take one small step. Speed multiplied by time is distance, and
