@@ -194,6 +194,36 @@ Further out:
 
 ---
 
-*A learning project. The maths comes from the standard mecanum kinematics you
-can find in any robotics textbook; the code, the mistakes, and the tests are
-mine.*
+## Where the maths comes from
+
+I did not invent any of the kinematics. The four wheel-speed equations in
+`mecanum.py` are the standard mecanum model, and these are the sources it comes
+from:
+
+- **Kevin M. Lynch and Frank C. Park, *Modern Robotics: Mechanics, Planning,
+  and Control*, Cambridge University Press, 2017** — Chapter 13.2,
+  "Omnidirectional Wheeled Mobile Robots", is the clearest derivation I found of
+  why four mecanum wheels give you three degrees of freedom.
+  The full book is free as a PDF:
+  [hades.mech.northwestern.edu/images/7/7f/MR.pdf](https://hades.mech.northwestern.edu/images/7/7f/MR.pdf) ·
+  [chapter page](https://modernrobotics.northwestern.edu/nu-gm-book-resource/13-2-omnidirectional-wheeled-mobile-robots-part-2-of-2/) ·
+  [lecture video](https://www.youtube.com/watch?v=NcOT9hOsceE)
+
+- **H. Taheri, B. Qiao and N. Ghaeminezhad, "Kinematic Model of a Four Mecanum
+  Wheeled Mobile Robot", *International Journal of Computer Applications*,
+  113(3), pp. 6-9, 2015** — a short paper that writes out the forward and
+  inverse kinematics for exactly this four-wheel layout.
+  [ijcaonline.org](https://www.ijcaonline.org/archives/volume113/number3/19804-1586/) ·
+  doi:[10.5120/19804-1586](https://doi.org/10.5120/19804-1586)
+
+- **Bengt Erland Ilon, US Patent
+  [US3876255A](https://patents.google.com/patent/US3876255A/en), filed 1972** —
+  the original wheel. Ilon was an engineer at the Swedish company Mecanum AB,
+  which is where the name comes from. Worth two minutes just to see the 45
+  degree rollers drawn by the person who thought of them.
+  ([overview on Wikipedia](https://en.wikipedia.org/wiki/Mecanum_wheel))
+
+---
+
+*A learning project. The maths is the standard mecanum kinematics, from the
+sources listed above; the code, the mistakes, and the tests are mine.*
