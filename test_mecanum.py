@@ -41,9 +41,14 @@ def test_the_maths_undoes_itself():
     back. We should get exactly what we asked for. If this fails, one of the
     two formulas has a sign wrong.
     """
+    # Deliberately awkward numbers: all three motions at once, mixed signs.
+    # Anything symmetrical could pass with a sign error and hide it.
     wanted = (0.4, -0.2, 0.3)
     speeds = mecanum.wheel_speeds(*wanted)
     got = mecanum.robot_motion(speeds)
+
+    # Compared with a tolerance rather than ==, because floating point does
+    # not round-trip exactly: -0.2 comes back as -0.20000000000000007.
     for want, actually in zip(wanted, got):
         assert abs(want - actually) < 1e-9
 
@@ -54,9 +59,13 @@ def test_a_robot_facing_sideways_still_goes_where_you_point_it():
     so this is where a rotation mistake would show up. Start it facing three
     different ways; it should reach the same target every time.
     """
+    # These three headings are the only place in the whole project where the
+    # rotation code does anything at all. Every demo runs at theta = 0, where
+    # both conversions are the identity -- so without this test a sign error
+    # in the rotation would never show up.
     for start_angle in (0.0, math.pi / 2, -1.2):
         robot = Robot(theta=start_angle)
-        for _ in range(500):
+        for _ in range(500):   # 10 seconds, far longer than it needs
             vx, vy = drive_to.velocity_towards(robot, 2.0, 1.0)
             robot.drive(vx, vy, 0.0, 0.02)
         assert drive_to.arrived(robot, 2.0, 1.0)
@@ -64,6 +73,8 @@ def test_a_robot_facing_sideways_still_goes_where_you_point_it():
 
 def test_it_slows_down_as_it_arrives():
     """Speed proportional to distance means it should ease in, not slam in."""
+    # Two robots, same target, different distances. No simulation needed:
+    # the controller is a pure function, so one call each is enough.
     far = Robot(x=0.0, y=0.0)
     near = Robot(x=1.9, y=0.0)
     speed_far = math.hypot(*drive_to.velocity_towards(far, 2.0, 0.0))

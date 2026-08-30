@@ -54,6 +54,9 @@ def main():
     frames = frames[::4]
     labels = labels[::4]
 
+    # Fixed axis limits, deliberately. If matplotlib were left to autoscale
+    # each frame the view would jump around and the robot would appear to
+    # stay still while the world moved.
     fig, ax = plt.subplots(figsize=(5, 5))
     ax.set_xlim(-0.45, 1.45)
     ax.set_ylim(-0.45, 1.45)
@@ -62,9 +65,14 @@ def main():
     ax.set_xlabel("x (metres)")
     ax.set_ylabel("y (metres)")
 
+    # Create the three lines once, empty, and refill them every frame -- far
+    # cheaper than redrawing the figure from scratch 100 times.
+    #
+    # The trailing comma in "trail, =" is not a typo: ax.plot() always returns
+    # a LIST of lines, and the comma unpacks the single line out of it.
     trail, = ax.plot([], [], linewidth=1.5, alpha=0.6)
     body, = ax.plot([], [], linewidth=2.5, color="tab:orange")
-    nose, = ax.plot([], [], linewidth=3.5, color="tab:red")
+    nose, = ax.plot([], [], linewidth=3.5, color="tab:red")   # shows the heading
     title = ax.set_title("")
     fig.tight_layout()
 
@@ -88,6 +96,8 @@ def main():
         title.set_text(f"{labels[i]}   (never turns)")
         return trail, body, nose, title
 
+    # FuncAnimation calls draw() once per frame. blit=False redraws everything
+    # each time -- slower, but blitting does not update the title text.
     anim = animation.FuncAnimation(fig, draw, frames=len(frames), interval=40, blit=False)
 
     os.makedirs("images", exist_ok=True)

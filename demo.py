@@ -30,15 +30,22 @@ def demo_sideways():
     facing the same way, having driven a complete square.
     """
     robot = Robot()
+
+    # Every position along the way is remembered so the whole path can be
+    # drawn at the end. The simulation itself only ever knows "now".
     path_x, path_y = [robot.x], [robot.y]
 
     # forward, left, backward, right -- two seconds each, no turning at all
+    # (100 steps x 0.02 s = 2 seconds per side, and omega stays 0.0 throughout)
     for vx, vy in [(0.5, 0), (0, 0.5), (-0.5, 0), (0, -0.5)]:
         for _ in range(100):
             robot.drive(vx, vy, 0.0, STEP)
             path_x.append(robot.x)
             path_y.append(robot.y)
 
+    # Draw the path. axis("equal") matters more than it looks: without it
+    # matplotlib stretches the axes to fill the figure and a perfect square
+    # comes out looking like a rectangle.
     plt.figure(figsize=(5, 5))
     plt.plot(path_x, path_y, linewidth=2)
     plt.plot(path_x[0], path_y[0], "o", markersize=9, label="start and finish")
@@ -63,6 +70,9 @@ def demo_drive_to():
     targets = [(2.0, 0.0), (2.0, 1.5), (0.5, 1.5), (0.0, 0.0)]
     path_x, path_y = [robot.x], [robot.y]
 
+    # Two loops: the outer one walks through the targets, the inner one keeps
+    # stepping until this target is reached. The break below leaves only the
+    # inner loop, which is what moves us on to the next target.
     for target_x, target_y in targets:
         for _ in range(1000):  # give up after 20 seconds
             if drive_to.arrived(robot, target_x, target_y):
@@ -72,6 +82,9 @@ def demo_drive_to():
             path_x.append(robot.x)
             path_y.append(robot.y)
 
+    # The corners of this path are rounded, not sharp. That is the controller
+    # showing through: it always drives straight at the target, so it starts
+    # cutting towards the next one as soon as it arrives at the last.
     plt.figure(figsize=(5.5, 5))
     plt.plot(path_x, path_y, linewidth=2, label="path driven")
     plt.plot([t[0] for t in targets], [t[1] for t in targets],
@@ -107,6 +120,8 @@ def demo_wheel_speeds():
     fig, axes = plt.subplots(1, 3, figsize=(11, 3.4), sharey=True)
     for ax, (title, motion) in zip(axes, moves):
         speeds = mecanum.wheel_speeds(*motion)
+        # Colour by SIGN, not size. The direction each wheel turns is the
+        # whole story here; the magnitudes are the same in every panel.
         colours = ["tab:blue" if s >= 0 else "tab:orange" for s in speeds]
         ax.bar(names, speeds, color=colours)
         ax.axhline(0, color="black", linewidth=0.8)
