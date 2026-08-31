@@ -16,9 +16,12 @@ itself, and no hardware anywhere.
 **Try it in thirty seconds:**
 
 ```bash
+python3 -m venv .venv          # make a private environment for the project
+source .venv/bin/activate      # Windows: .venv\Scripts\activate
 pip install -r requirements.txt
-python3 demo.py            # runs it and makes the charts below
-python3 -m pytest -v       # runs the 8 tests
+
+python3 demo.py                # runs it and makes the charts below
+python3 -m pytest -v           # runs the 8 tests
 ```
 
 Every picture in this README is produced by the code — `demo.py` writes the
@@ -88,15 +91,26 @@ fidgeting forever.
 
 ## Running it
 
-You need Python 3. Then:
+You need Python 3. Set up a virtual environment first, so matplotlib and
+pytest land inside the project rather than in your system Python:
 
 ```bash
+python3 -m venv .venv          # once, to create it
+source .venv/bin/activate      # every new terminal.  Windows: .venv\Scripts\activate
 pip install -r requirements.txt
-
-python3 demo.py            # run the demos and save the charts
-python3 animate.py         # save the animation at the top of this page
-python3 -m pytest -v       # run the tests
 ```
+
+Your prompt should now start with `(.venv)`. Then:
+
+```bash
+python3 demo.py                # run the demos and save the charts
+python3 animate.py             # save the animation at the top of this page
+python3 -m pytest -v           # run the tests
+```
+
+If you get `No module named pytest`, the environment is not active -- run the
+`source` line again, or point straight at it with `./.venv/bin/python -m pytest -v`.
+Type `deactivate` when you are finished.
 
 Everything lands in `images/`:
 
