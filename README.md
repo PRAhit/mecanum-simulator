@@ -103,6 +103,8 @@ pip install -r requirements.txt
 Your prompt should now start with `(.venv)`. Then:
 
 ```bash
+source .venv/bin/activate      # every new terminal, before anything else
+
 python3 demo.py                # run the demos and save the charts
 python3 animate.py             # save the animation at the top of this page
 python3 -m pytest -v           # run the tests
